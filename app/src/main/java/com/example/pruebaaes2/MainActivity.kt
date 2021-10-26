@@ -9,7 +9,6 @@ import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-
 //var iv = "Ve7GDmoZlekzjXdHQMxT3w==".toByteArray(charset("US-ASCII"))
 //val key = "bbC2H19lkVbQDfakxcrtNMQdd0FloLyw"
 //var playtext = "dato+encriptado+url+encode=="
@@ -20,28 +19,22 @@ import javax.crypto.spec.SecretKeySpec
 //var encodedKey: ByteArray = Base64.decode(key, Base64.DEFAULT)
 //var originalKey: SecretKey = SecretKeySpec(encodedKey, 0, encodedKey.size, "AES")
 
-var stringConcatenate =
-    "A45pFeUyNBMvdcuKFDi8xA==1imeT0NhPqYWgzn95VfviB7wpMZRE+bswQU5Czt6eoo=+vmMTXoo4udr+dtsjoNKa7Q7ekw72EvWXH9usJDFXpY="
-val GLOBAL_SYMMETRIC_KEY =
-    "1dNpH6j58Ry9bBFeDMotmQ=="
-val HMAC_ENCRYPTION_KEY =
-    "RabtLEt2b4CDYtprp1zBtPiMyulxfVx40cR5HYtyHyCVSG0wV2udbtxfHW2Xw5d08DLjERtacpPyP1EbfS3AUvvzNWyZmUu+eoJ85xkAF8wDgFdmR9+UYxc1xd0Yt9ghzf1S6sR1It4pqsMBmKGG8uXc/mXfsSl97g6v7kLlHDA="
-val algorithm =
-    "HmacSHA256"
-val symmetricAccess =
-    "cTly/7xz2GKu7jJBeDd1nA==vmb/pWfW+00jl1/L7Euacf9Xw0BUVwn3HzNjKBHcc2Y=ATvZuS8gWlAf7NCfFcVDR7BvbqKXouKASlDung69NT4="
-val hashEncrypt =
-    "cTly/7xz2GKu7jJBeDd1nA==KNpVhpJuVUV4RQuc9tosMsUYvGkZYJWdwykZHJDeqvyf72IFCyuxkhvdaOM56uZsH7+rl/SM9dfAvWyDmN+xwtwjUnkjs/X4iWUJvvNw19TaU5RT6i/OJ/CjazOemvLKY2aNVP06l46cY6dhlP3yVwmdhWkH6PtnlqDtypgI5LRP7bQzY8tFQJU2Y+HKbUPIaM5Q5rSTlyyGxUWJBGe+Ceda/sF2gQmnVOhhOhLh5pQ=9s4QR0wo05fS574+E1K6RzsVa+VddwEoe+OEN/NwK9E="
+// CONSTANTE
+val GLOBAL_SYMMETRIC_KEY = "1dNpH6j58Ry9bBFeDMotmQ=="
+val HMAC_ENCRYPTION_KEY = "RabtLEt2b4CDYtprp1zBtPiMyulxfVx40cR5HYtyHyCVSG0wV2udbtxfHW2Xw5d08DLjERtacpPyP1EbfS3AUvvzNWyZmUu+eoJ85xkAF8wDgFdmR9+UYxc1xd0Yt9ghzf1S6sR1It4pqsMBmKGG8uXc/mXfsSl97g6v7kLlHDA="
+
+var stringConcatenate = "A45pFeUyNBMvdcuKFDi8xA==1imeT0NhPqYWgzn95VfviB7wpMZRE+bswQU5Czt6eoo=+vmMTXoo4udr+dtsjoNKa7Q7ekw72EvWXH9usJDFXpY="
+
+val algorithm = "HmacSHA256"
+
+// DESENCRIPTAR
+val symmetricAccess = "cTly/7xz2GKu7jJBeDd1nA==vmb/pWfW+00jl1/L7Euacf9Xw0BUVwn3HzNjKBHcc2Y=ATvZuS8gWlAf7NCfFcVDR7BvbqKXouKASlDung69NT4="
+val hashEncrypt = "cTly/7xz2GKu7jJBeDd1nA==KNpVhpJuVUV4RQuc9tosMsUYvGkZYJWdwykZHJDeqvyf72IFCyuxkhvdaOM56uZsH7+rl/SM9dfAvWyDmN+xwtwjUnkjs/X4iWUJvvNw19TaU5RT6i/OJ/CjazOemvLKY2aNVP06l46cY6dhlP3yVwmdhWkH6PtnlqDtypgI5LRP7bQzY8tFQJU2Y+HKbUPIaM5Q5rSTlyyGxUWJBGe+Ceda/sF2gQmnVOhhOhLh5pQ=9s4QR0wo05fS574+E1K6RzsVa+VddwEoe+OEN/NwK9E="
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //obtengo la clave simetrica que usare para encriptar y desencriptar todos los campos AES
-        val simetricKey = getSymmetricKey(symmetricAccess, GLOBAL_SYMMETRIC_KEY)
-        val encryptValue = encrypt("yolanda@yopmail.com", symmetricAccess, hashEncrypt, simetricKey)
-        val decryptt = decrypt(encryptValue, simetricKey)
-        Log.d("TAG2", decryptt)
     }
 }
 
@@ -73,7 +66,6 @@ fun encrypt(
     //concatenar valores
     val encryptValue = (ivRandomBase64String + encrytedTextBase64 + hMac).replace("\n", "")
     return encryptValue
-
 }
 
 @Throws(Exception::class)
@@ -93,8 +85,7 @@ fun decrypt(encryptValue: String, secreyKey: String): String {
     //obtengo el HASH recibido en el string
     val hmacReceive = encryptValue.substring(ivCipherTextLength, encryptValue.length)
     //obtengo el HMAC del string que viene por parametro ya cortado
-    val hmacGenerated =
-        generateHmac(textCiphered, HMAC_ENCRYPTION_KEY, algorithm).replace("\n", "")
+    val hmacGenerated = generateHmac(textCiphered, HMAC_ENCRYPTION_KEY, algorithm).replace("\n", "")
     //El operador !== devuelve verdadero cuando los elementos no tienen el mismo valor o el mismo tipo.
     if (hmacReceive !== hmacGenerated) {
         //Construimos una clave secreta indicandole que es de tipo AES pasandole el string decodeado en base64, actualmente esta en base64
@@ -125,8 +116,8 @@ fun getSymmetricKey(symmetricAccess: String, key: String): String {
     return decrypt(symmetricAccess, key)
 }
 
-//HMAC significa código de autenticación de mensajes basado en hash.
-//Esta autenticación es producto de una función hash aplicada al cuerpo }
+// HMAC significa código de autenticación de mensajes basado en hash.
+// Esta autenticación es producto de una función hash aplicada al cuerpo
 // de un mensaje junto con una clave secreta.
 fun generateHmac(data: String, key: String, algorithm: String): String {
     try {
@@ -140,7 +131,6 @@ fun generateHmac(data: String, key: String, algorithm: String): String {
         throw IllegalArgumentException(e)
     }
 }
-
 
 //@Throws(NoSuchAlgorithmException::class)
 //private fun getSecretKey(secret: String): SecretKeySpec? {
