@@ -138,7 +138,7 @@ class Aes(
 
             // Desencriptación del mensaje
             cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
-            val decryptedArray = cipher.doFinal(Base64.decode(encrypted, base64flag))
+             val decryptedArray = cipher.doFinal(Base64.decode(encrypted, base64flag))
             return String(decryptedArray)
 
         } else {

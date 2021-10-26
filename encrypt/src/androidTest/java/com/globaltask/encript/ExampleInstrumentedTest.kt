@@ -112,8 +112,8 @@ class ExampleInstrumentedTest {
     @Test
     fun returnTrueIfRemoteMessageIfDecode() {
 
-        val encrypt = "" // valor encriptado por el backend
-        val expected = "" // valor esperado por el backend
+        val encrypt = "A45pFeUyNBMvdcuKFDi8xA==1imeT0NhPqYWgzn95VfviB7wpMZRE+bswQU5Czt6eoo=+vmMTXoo4udr+dtsjoNKa7Q7ekw72EvWXH9usJDFXpY=" // valor encriptado por el backend
+        val expected = "yolanda@yopmail.com" // valor esperado por el backend
 
         val key = aes.decode(symmetricAccess)
 
