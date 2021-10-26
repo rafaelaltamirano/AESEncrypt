@@ -7,8 +7,6 @@ import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-// TODO: No creo necesario tener que generar un secureRandomArray cada vez que se llame una de las
-// funciones code o decode, probablemente sea mas eficiente generar una
 class Aes(
     private val globalKey: String,
     private val hmacKey: String
@@ -19,11 +17,12 @@ class Aes(
         // Constantes
         private const val algorithm = "HmacSHA256"
         private const val transformation = "AES/CBC/PKCS7PADDING"
-        private const val hmacLength = 44
+        private const val hmacLength = 45
         private const val secureRandomLength = 25
         private const val secureRandomArraySize = 16
         private const val encryptType = "AES"
         private const val base64flag = Base64.DEFAULT
+
         private val cipher by lazy { Cipher.getInstance(transformation) }
         private val secureRandomArray by lazy { generateSecureRandomArray() }
 
@@ -90,6 +89,7 @@ class Aes(
         // El hmac es un hash que se calcula con el mensaje encriptado y su respectiva llave de
         // cifrado, dicho valor sera concatenado al String resultante.
         val hmac = generateHmac(encrypted, hash)
+        println(">>: decode.hmac: ${hmac.length}")
 
         return (secureRandom + encrypted + hmac).replace("\n", "")
     }
@@ -112,10 +112,10 @@ class Aes(
         val secureRandom = encoded.substring(0, secureRandomLength - 1)
 
         // Obteniendo en mensaje encriptado del codificado
-        val encrypted = encoded.substring(secureRandomLength-1, encoded.length - hmacLength)
+        val encrypted = encoded.substring(secureRandomLength-1, (encoded.length - (hmacLength - 1)))
 
         // obteniendo el hmac del codificado
-        val hmac = encoded.substring(encoded.length - hmacLength, encoded.length)
+        val hmac = encoded.substring((encoded.length - (hmacLength - 1)), encoded.length)
 
         // NOTA: No entiendo la razón de esta linea, dicho valor no vuelve a ser utilizado.
         // su unica finalizdad es para comprobar que sea diferente que el hmac extraido del mencaje
@@ -130,9 +130,10 @@ class Aes(
 
             // Vector de inicialización creado a partir de secureRandomArray.
             // Este valor es utilizado por cifrados con algortimos de retroalimentación como el AES.
-            val iv = IvParameterSpec(Base64.decode(secureRandom, Base64.DEFAULT))
+            val iv = IvParameterSpec(Base64.decode(secureRandom, base64flag))
 
-            // Creación de llave secreta a partir de una matriz de bytes dada y del algoritmo a utilizar
+            // Creación de llave secreta a partir de una matriz de bytes dada y del algoritmo a
+            // utilizar
             val secretKey = SecretKeySpec(Base64.decode(key, base64flag), encryptType)
 
             // Desencriptación del mensaje

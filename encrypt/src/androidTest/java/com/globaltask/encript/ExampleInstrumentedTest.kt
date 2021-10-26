@@ -11,14 +11,18 @@ import org.junit.Assert.*
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
 
+    // INICIALIZACIÓN DE LAS PRUEBAS
     companion object  {
 
+        // CONSTANTES
         private const val GLOBAL_SYMMETRIC_KEY = "1dNpH6j58Ry9bBFeDMotmQ=="
         private const val HMAC_ENCRYPTION_KEY = "RabtLEt2b4CDYtprp1zBtPiMyulxfVx40cR5HYtyHyCVSG0wV2udbtxfHW2Xw5d08DLjERtacpPyP1EbfS3AUvvzNWyZmUu+eoJ85xkAF8wDgFdmR9+UYxc1xd0Yt9ghzf1S6sR1It4pqsMBmKGG8uXc/mXfsSl97g6v7kLlHDA="
 
-        val symmetricAccess = "cTly/7xz2GKu7jJBeDd1nA==vmb/pWfW+00jl1/L7Euacf9Xw0BUVwn3HzNjKBHcc2Y=ATvZuS8gWlAf7NCfFcVDR7BvbqKXouKASlDung69NT4="
-        val hashEncrypt = "cTly/7xz2GKu7jJBeDd1nA==KNpVhpJuVUV4RQuc9tosMsUYvGkZYJWdwykZHJDeqvyf72IFCyuxkhvdaOM56uZsH7+rl/SM9dfAvWyDmN+xwtwjUnkjs/X4iWUJvvNw19TaU5RT6i/OJ/CjazOemvLKY2aNVP06l46cY6dhlP3yVwmdhWkH6PtnlqDtypgI5LRP7bQzY8tFQJU2Y+HKbUPIaM5Q5rSTlyyGxUWJBGe+Ceda/sF2gQmnVOhhOhLh5pQ=9s4QR0wo05fS574+E1K6RzsVa+VddwEoe+OEN/NwK9E="
+        // TEMPORALES
+        private const val symmetricAccess = "cTly/7xz2GKu7jJBeDd1nA==vmb/pWfW+00jl1/L7Euacf9Xw0BUVwn3HzNjKBHcc2Y=ATvZuS8gWlAf7NCfFcVDR7BvbqKXouKASlDung69NT4="
+        private const val hashEncrypt = "cTly/7xz2GKu7jJBeDd1nA==KNpVhpJuVUV4RQuc9tosMsUYvGkZYJWdwykZHJDeqvyf72IFCyuxkhvdaOM56uZsH7+rl/SM9dfAvWyDmN+xwtwjUnkjs/X4iWUJvvNw19TaU5RT6i/OJ/CjazOemvLKY2aNVP06l46cY6dhlP3yVwmdhWkH6PtnlqDtypgI5LRP7bQzY8tFQJU2Y+HKbUPIaM5Q5rSTlyyGxUWJBGe+Ceda/sF2gQmnVOhhOhLh5pQ=9s4QR0wo05fS574+E1K6RzsVa+VddwEoe+OEN/NwK9E="
 
+        // CREANDO LA INSTANCIA DEL AES
         private val aes = Aes(GLOBAL_SYMMETRIC_KEY, HMAC_ENCRYPTION_KEY)
     }
 
@@ -33,12 +37,12 @@ class ExampleInstrumentedTest {
     fun returnTrueIfgHmacResultLengthIsConst() {
 
         // PROBANDO LA LONGITUD DE LA RESPUESTA PARA UN TEXTO VACIO
-        val s1 = ""
+        val s1 = "LAKSDFHSO"
         val r1 = Aes.generateHmac(s1, HMAC_ENCRYPTION_KEY)
         println(">>: r1: { length:  ${r1.length}, r1: $r1 }")
 
         // PROBANDO LA LONGITUD DE LA RESPUESTA PARA UN TEXTO PEQUEÑO
-        val s2 = "hola mundo"
+        val s2 = "hola mundo FASFS FL;SKHFO"
         val r2 = Aes.generateHmac(s2, HMAC_ENCRYPTION_KEY)
         println(">>: r2: { length:  ${r2.length}, r2: $r2 }")
 
@@ -55,12 +59,14 @@ class ExampleInstrumentedTest {
 
     /**
      * esta prueba falla, en caso de que la longitud del resultado de la función generateHmac sea
-     * diferente a 44.
+     * diferente a 45.
      */
     @Test
-    fun returnTrueIfgHmacResultLengthIs44() {
-        val r = Aes.generateHmac("", HMAC_ENCRYPTION_KEY)
-        assertEquals(r.length, 44)
+    fun returnTrueIfgHmacResultLengthIs45() {
+        val data = "pudin de limon" // probar distintos valores, siempre debe dar 44 al final
+        val r = Aes.generateHmac(data, HMAC_ENCRYPTION_KEY)
+        println(">>: r: ${r.length}")
+        assertEquals(r.length, 45)
     }
 
     /**
@@ -106,8 +112,8 @@ class ExampleInstrumentedTest {
     @Test
     fun returnTrueIfRemoteMessageIfDecode() {
 
-        val encrypt = ""
-        val expected = ""
+        val encrypt = "" // valor encriptado por el backend
+        val expected = "" // valor esperado por el backend
 
         val key = aes.decode(symmetricAccess)
 
