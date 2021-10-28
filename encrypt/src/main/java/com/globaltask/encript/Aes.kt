@@ -11,7 +11,6 @@ class Aes(
     private val globalKey: String,
     private val hmacKey: String
 ) {
-// concatenar el iv y el hash
     companion object {
 
         // Constantes
