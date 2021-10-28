@@ -11,7 +11,7 @@ class Aes(
     private val globalKey: String,
     private val hmacKey: String
 ) {
-
+// concatenar el iv y el hash
     companion object {
 
         // Constantes
@@ -30,7 +30,7 @@ class Aes(
          * Esta función genera un hash basado en en mensaje encriptado y una llave.
          * HMAC significa código de autenticación de mensajes basado en hash.
          * @param encrypted mensaje encriptado
-         * @param key llave de cifrado
+         * @param key llave de cif  rado
          */
         fun generateHmac(encrypted: String, key: String): String {
             val sha256Hmac = Mac.getInstance(algorithm)
@@ -88,7 +88,7 @@ class Aes(
 
         // El hmac es un hash que se calcula con el mensaje encriptado y su respectiva llave de
         // cifrado, dicho valor sera concatenado al String resultante.
-        val hmac = generateHmac(encrypted, hash)
+        val hmac = generateHmac(secureRandom+encrypted, hash)
         println(">>: decode.hmac: ${hmac.length}")
 
         return (secureRandom + encrypted + hmac).replace("\n", "")
@@ -111,6 +111,7 @@ class Aes(
         // Obteniendo el secureRandom del codificado
         val secureRandom = encoded.substring(0, secureRandomLength - 1)
 
+
         // Obteniendo en mensaje encriptado del codificado
         val encrypted = encoded.substring(secureRandomLength-1, (encoded.length - (hmacLength - 1)))
 
@@ -123,7 +124,7 @@ class Aes(
         // utiliza una llave generadora que la de esta linea.
         // Tras lo ya mencionado la siguiente linea parece no tener utilidad alguna. ademas que
         // inutilizaria el uso del parametro hmacKey.
-        val hmacGenerated = generateHmac(encrypted, hmacKey)
+        val hmacGenerated = generateHmac(secureRandom+encrypted, hmacKey)
 
         // Esto siempre sera true
         if (hmac != hmacGenerated) {
