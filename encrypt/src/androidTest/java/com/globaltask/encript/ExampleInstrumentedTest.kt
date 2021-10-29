@@ -38,9 +38,6 @@ class ExampleInstrumentedTest {
         val encrypt = aes.code(originalMessage, hmacKey, symmetricalKey)
 //        println(">>: encrypt: $encrypt")
 
-//        val key = aes.decode(symmetricalKeyEncrypt, hmacKeyEncrypt)
-//        println(">>: key: $key")
-
         val message = aes.decode(encrypt, hmacKey, symmetricalKey)
 //        println(">>: message: $message")
 
