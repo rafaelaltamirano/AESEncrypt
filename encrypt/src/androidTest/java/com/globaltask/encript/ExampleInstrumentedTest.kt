@@ -8,8 +8,6 @@ import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 
-
-
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
 
@@ -25,7 +23,8 @@ class ExampleInstrumentedTest {
         private const val hashEncrypt = "aaYTSPen030xUN7+NmY5yw==JC2uBdJp19PVjqbg2M1XrraQLc4IxqM+TPlP0x/wrcM=wtirKYyGXqdRDILdFpj2TMnV8ndMfWHhFUoJMBqVQEI="
 
         // CREANDO LA INSTANCIA DEL AES
-        private val aes = Aes(SECURITY_ENCRYPTION_SYMMETRIC_KEY, SECURITY_ENCRYPTION_HMACKEY)
+        private val aes = Aes.getInstance(SECURITY_ENCRYPTION_SYMMETRIC_KEY, SECURITY_ENCRYPTION_HMACKEY)
+
     }
 
     /**
@@ -40,19 +39,19 @@ class ExampleInstrumentedTest {
 
         // PROBANDO LA LONGITUD DE LA RESPUESTA PARA UN TEXTO VACIO
         val s1 = "LAKSDFHSO"
-        val r1 = Aes.generateHmac(s1, SECURITY_ENCRYPTION_SYMMETRIC_KEY)
+        val r1 = aes.generateHmac(s1, hashEncrypt)
         println(">>: r1: { length:  ${r1.length}, r1: $r1 }")
 
         // PROBANDO LA LONGITUD DE LA RESPUESTA PARA UN TEXTO PEQUEÑO
         val s2 = "hola mundo FASFS FL;SKHFO"
-        val r2 = Aes.generateHmac(s2, SECURITY_ENCRYPTION_HMACKEY)
+        val r2 = aes.generateHmac(s2, hashEncrypt)
         println(">>: r2: { length:  ${r2.length}, r2: $r2 }")
 
         if (r1.length!=r2.length) assertTrue(false)
 
         // PROBANDO LA LONGITUD DE LA RESPUESTA PARA UN TEXTO GRANDE
         val s3 = "RabtLEt2b4CDYtprp1zBtPiMyulxfVx40cR5HYtyHyCVSG0wV2udbtxfHW2Xw5d08DLjERtacpPyP1EbfS3AUvvzNWyZmUu+eoJ85xkAF8wDgFdmR9+UYxc1xd0Yt9ghzf1S6sR1It4pqsMBmKGG8uXc/mXfsSl97g6v7kLlHDA="
-        val r3 = Aes.generateHmac(s3, SECURITY_ENCRYPTION_SYMMETRIC_KEY)
+        val r3 = aes.generateHmac(s3, hashEncrypt)
         println(">>: r3: { length:  ${r3.length}, r3: $r3 }")
 
         assertEquals(r2.length, r3.length)
@@ -66,7 +65,7 @@ class ExampleInstrumentedTest {
     @Test
     fun returnTrueIfgHmacResultLengthIs45() {
         val data = "pudin de limon" // probar distintos valores, siempre debe dar 44 al final
-        val r = Aes.generateHmac(data, SECURITY_ENCRYPTION_HMACKEY)
+        val r = aes.generateHmac(data, hashEncrypt)
         println(">>: r: ${r.length}")
         assertEquals(r.length, 45)
     }
@@ -90,7 +89,7 @@ class ExampleInstrumentedTest {
         val encrypt = aes.code(originalMessage, hashEncrypt, symmetricAccess)
 //        println(">>: encrypt: $encrypt")
 
-        val key = aes.decode(symmetricAccess)
+        val key = aes.decode(symmetricAccess, hashEncrypt)
 //        println(">>: key: $key")
 
         val message = aes.decode(encrypt, key)
@@ -117,7 +116,7 @@ class ExampleInstrumentedTest {
         val encrypt = "A45pFeUyNBMvdcuKFDi8xA==1imeT0NhPqYWgzn95VfviB7wpMZRE+bswQU5Czt6eoo=+vmMTXoo4udr+dtsjoNKa7Q7ekw72EvWXH9usJDFXpY=" // valor encriptado por el backend
         val expected = "yolanda@yopmail.com" // valor esperado por el backend
 
-        val key = aes.decode(symmetricAccess)
+        val key = aes.decode(symmetricAccess, hashEncrypt)
 
         val message = aes.decode(encrypt, key)
 
