@@ -3,95 +3,80 @@ package com.globaltask.encript
 import android.util.Base64
 import java.security.SecureRandom
 import javax.crypto.Cipher
+import javax.crypto.Cipher.ENCRYPT_MODE
 import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * Esta clase ofrece las funciones necesarias para codificar y decodificar mensajes encriptados con
+ * AES.
+ */
 class Aes private constructor(
     private val globalKey: String,
-    private val hmacKey: String
+    private val globalHmacKey: String
 ) {
+
+    // CONSTANTES
+    private val algorithm = "HmacSHA256"
+    private val transformation = "AES/CBC/PKCS7PADDING"
+    private val hmacLength = 32 // Bytes
+    private val secureRandomLength = 16 // Bytes
+    private val encryptType = "AES"
+    private val base64flag = Base64.DEFAULT
+
+    private val cipher by lazy { Cipher.getInstance(transformation) }
+    private val ivByteArray by lazy { generateIv() }
 
     companion object {
 
-        // Constantes
-        private const val algorithm = "HmacSHA256"
-        private const val transformation = "AES/CBC/PKCS7PADDING"
-        private const val hmacLength = 45
-        private const val secureRandomLength = 25
-        private const val secureRandomArraySize = 16
-        private const val encryptType = "AES"
-        private const val base64flag = Base64.DEFAULT
-
-        private val cipher by lazy { Cipher.getInstance(transformation) }
-        private val secureRandomArray by lazy { generateSecureRandomArray() }
-
         @Volatile private var INSTANCE: Aes? = null
 
+        /**
+         * Genera una instancia singleton de la clase Aes
+         * @param globalKey llave con la cual se desencriptara la llave temporal simetrica.
+         * @param hmacKey llave con la cual se desencriptara la llave para generar el hmac
+         */
         fun getInstance(globalKey: String, hmacKey: String): Aes =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Aes(globalKey, hmacKey).also { INSTANCE = it }
             }
-
-        /**
-         * Esta función genera un array de números aleatorios con un nivel se seguridad
-         * criptográfica
-         */
-        fun generateSecureRandomArray(): ByteArray {
-            val secureRandom = SecureRandom()
-            val result = ByteArray(secureRandomArraySize)
-            secureRandom.nextBytes(result)
-            return result
-        }
 
     }
 
     /**
      * Esta función códifica un mensaje.
      * @param message mensaje a encriptar
-     * @param hashEncrypt texto encriptado temporal, con la llave para generar el hmac
-     * @param symmetricalAccess texto encriptado temporal, con la llave simetrica de encriptación
+     * @param hmacKey llave para generar el hmac
+     * @param symmetricalKey llave simetrica de encriptación
      */
-    fun code(message: String, hashEncrypt: String, symmetricalAccess: String): String {
+    fun code(message: String, hmacKey: String, symmetricalKey: String): String {
 
-        // Generación de un vector de bytes aleatorio.
-//        val secureRandomArray = generateSecureRandomArray()
+        // Vector de inicialización
+        val iv = IvParameterSpec(ivByteArray)
 
-        // Se códifica el secureRandomArray a base64, para manejarlo como un String.
-        val secureRandom = Base64.encodeToString(secureRandomArray, base64flag)
-
-        // Vector de inicialización creado a partir de secureRandomArray.
-        // Este valor es utilizado por cifrados con algortimos de retroalimentación como el AES.
-        val iv = IvParameterSpec(secureRandomArray)
-
-        // Desencriptación del parametro symmetricalAccess, para poder conseguir la llave de
-        // encriptación simétrica
-        val symmetricalKey = decode(symmetricalAccess, globalKey)
-
-        // Creación de llave secreta a partir de una matriz de bytes dada y del algoritmo a utilizar
-        val secretKey = SecretKeySpec(Base64.decode(symmetricalKey, base64flag), encryptType)
+        // Llave de encriptación
+        val key = SecretKeySpec(symmetricalKey.base64ToByteArray(), encryptType)
 
         // Encriptación del mensaje
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
-        val encryptedArray = cipher.doFinal(message.toByteArray())
-        val encrypted = Base64.encodeToString(encryptedArray, base64flag)
+        cipher.init(ENCRYPT_MODE, key, iv)
+        val encryptedMessageByteArray = cipher.doFinal(message.toByteArray())
 
-        // El hmac es un hash que se calcula con el mensaje encriptado y su respectiva llave de
-        // cifrado, dicho valor sera concatenado al String resultante.
-        val hmac = generateHmac(secureRandom+encrypted, hashEncrypt)
+        // Hmac obtenido a partir del iv y el mensaje encriptado
+        val hmacByteArray = generateHmac(ivByteArray, encryptedMessageByteArray, hmacKey)
 
-        return (secureRandom + encrypted + hmac).replace("\n", "")
+        return (ivByteArray + encryptedMessageByteArray + hmacByteArray).toBase64()
 
     }
 
     /**
      * Esta función decodifica un mensaje codificado
      * @param encoded mensaje codificado
-     * @param hashEncrypt llave encriptada temporal, utilizada para generar el hmac
-     * @param key llave de decodificación, en caso de omitirse este parametro su valor pasa a ser el
-     * del globalKey que se halla especificado en el constructor
+     * @param hmacKey llave para generar el hmac
+     * @param key llave simetrica de encriptación, en caso de omitirse este parametro su valor pasa
+     * a ser el  del globalKey que se halla especificado en el constructor
      */
-    fun decode(encoded: String, hashEncrypt: String, key: String = globalKey): String {
+    fun decode(encoded: String, hmacKey: String, key: String = globalKey): String {
 
         // NOTA: El mensaje codificado esta compuesto por tres partes:
         // 1. secureRandom: Representacion en base64 de un vector de bytes aleatorio.
@@ -99,86 +84,22 @@ class Aes private constructor(
         // 3. hmac: Hash obtenido con el mensaje encriptado y una llave de cifrado. La longitud del
         //    hmac ha demostrado poseer una longitud constante sin importar el tamaño del mensaje.
 
-        // Obteniendo el secureRandom del codificado
-        val secureRandom = encoded.substring(0, secureRandomLength - 1)
-
-        // Obteniendo en mensaje encriptado del codificado
-        val encrypted = encoded.substring(secureRandomLength-1, (encoded.length - (hmacLength - 1)))
-
-        // obteniendo el hmac del codificado
-        val hmac = encoded.substring((encoded.length - (hmacLength - 1)), encoded.length)
-
-        // NOTA: No entiendo la razón de esta linea, dicho valor no vuelve a ser utilizado.
-        // su unica finalizdad es para comprobar que sea diferente que el hmac extraido del mencaje
-        // codificado. pero obvio que siempre sera diferente ya que el hmac del mensaje cifrado
-        // utiliza una llave generadora que la de esta linea.
-        // Tras lo ya mencionado la siguiente linea parece no tener utilidad alguna. ademas que
-        // inutilizaria el uso del parametro hmacKey.
-//        val hmacGenerated = generateHmac(secureRandom+encrypted, hashEncrypt)
-
-        // Esto siempre sera true
-//        if (hmac != hmacGenerated) {
-            println(">>: SON IGUALES")
-
-            // Vector de inicialización creado a partir de secureRandomArray.
-            // Este valor es utilizado por cifrados con algortimos de retroalimentación como el AES.
-            val iv = IvParameterSpec(Base64.decode(secureRandom, base64flag))
-
-            // Creación de llave secreta a partir de una matriz de bytes dada y del algoritmo a
-            // utilizar
-            val secretKey = SecretKeySpec(Base64.decode(key, base64flag), encryptType)
-
-            // Desencriptación del mensaje
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
-            val decryptedArray = cipher.doFinal(Base64.decode(encrypted, base64flag))
-            return String(decryptedArray)
-
-//        } else {
-//            println(">>: SON DIFERENTES")
-//            throw UnsupportedOperationException()
-//        }
-
-    }
-
-    /**
-     * Esta función genera un hash basado en el mensaje encriptado y una llave.
-     * HMAC significa código de autenticación de mensajes basado en hash.
-     * @param encrypted mensaje encriptado
-     * @param keyEncrypt llave de cifrado encriptada temporal
-     */
-    fun generateHmac(encrypted: String, keyEncrypt: String): String {
-
-        // Desencriptación del parametro keyEncrypt, este valor sera utilizado como llave de cifrdo
-        // para generar el hmac
-        val key = decode(keyEncrypt, hmacKey)
-
-        val sha256Hmac = Mac.getInstance(algorithm)
-        val secretKey = SecretKeySpec(key.toByteArray(), algorithm)
-        sha256Hmac.init(secretKey)
-        return Base64.encodeToString(sha256Hmac.doFinal(encrypted.toByteArray()), base64flag)
-    }
-
-    private fun simpleDecode(encoded: String, key: String): String {
-
-        // NOTA:
-        // El mensaje codificado esta compuesto por tres partes:
-        // 1. secureRandom: Representacion en base64 de un vector de bytes aleatorio.
-        // 2. encrypted: Mensaje encriptado.
-        // 3. hmac: Hash obtenido con el mensaje encriptado y una llave de cifrado. La longitud del
-        //    hmac ha demostrado poseer una longitud constante sin importar el tamaño del mensaje.
+        val encodedByteArray = encoded.base64ToByteArray()
 
         // Obteniendo el secureRandom del codificado
-        val secureRandom = encoded.substring(0, secureRandomLength - 1)
+        val secureRandomByteArray = encodedByteArray.copyOfRange(0, secureRandomLength)
 
         // Obteniendo en mensaje encriptado del codificado
-        val encrypted = encoded.substring(secureRandomLength-1, (encoded.length - (hmacLength - 1)))
+        val encryptedByteArray = encodedByteArray.copyOfRange(secureRandomLength, (encodedByteArray.size - hmacLength))
 
         // obteniendo el hmac del codificado
-        val hmac = encoded.substring((encoded.length - (hmacLength - 1)), encoded.length)
+        val hmacByteArray = encodedByteArray.copyOfRange((encodedByteArray.size - (hmacLength - 1)), encodedByteArray.size)
+
+        // TODO: Crear funcion para comprobación de errores
 
         // Vector de inicialización creado a partir de secureRandomArray.
         // Este valor es utilizado por cifrados con algortimos de retroalimentación como el AES.
-        val iv = IvParameterSpec(Base64.decode(secureRandom, base64flag))
+        val iv = IvParameterSpec(secureRandomByteArray)
 
         // Creación de llave secreta a partir de una matriz de bytes dada y del algoritmo a
         // utilizar
@@ -186,9 +107,56 @@ class Aes private constructor(
 
         // Desencriptación del mensaje
         cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
-        val decryptedArray = cipher.doFinal(Base64.decode(encrypted, base64flag))
+        val decryptedArray = cipher.doFinal(encryptedByteArray)
+
         return String(decryptedArray)
 
     }
+
+    /**
+     * Esta función genera un hmac según sus parametros de entrada.
+     * HMAC significa código de autenticación de mensajes basado en hash.
+     * dicho valor sera anexado al final del mensaje encriptado, y se suele utilizar como método de
+     * deteccion de errores.
+     * @param ivByteArray vector de inicialización
+     * @param encryptedMessageByteArray mensje encriptado
+     * @param key llave a utilizar para generar el hmac
+     */
+    private fun generateHmac(ivByteArray: ByteArray, encryptedMessageByteArray: ByteArray, key: String): ByteArray {
+        val concat = ivByteArray + encryptedMessageByteArray
+        val sha256Hmac = Mac.getInstance(algorithm)
+        val secretKey = SecretKeySpec(key.toByteArray(), algorithm)
+        sha256Hmac.init(secretKey)
+        return sha256Hmac.doFinal(concat)
+    }
+
+    /**
+     * Esta función genera un array de bytes con números aleatorios creados con un algoritmo que
+     * garantiza una aliatoriedad con un nivel de seguridad criptografica.
+     * Este valor es utilizado por cifrados con algortimos de retroalimentación como el AES.
+     */
+    private fun generateIv(): ByteArray {
+        val secureRandom = SecureRandom()
+        val result = ByteArray(secureRandomLength)
+        secureRandom.nextBytes(result)
+        return result
+    }
+
+    //<editor-fold desc="FUNCIONES DE EXTENSIÓN">
+
+    /**
+     * Función de extensión que facilita la conversion de ByteArray a base64
+     */
+    private fun ByteArray.toBase64(): String {
+        return Base64.encodeToString(this, base64flag).replace("\n", "")
+    }
+
+    /**
+     * Función de extensión que facilita la decodificacion de un texto en Base64 a ByteArray
+     */
+    private fun String.base64ToByteArray(): ByteArray {
+        return Base64.decode(this, base64flag)
+    }
+    //</editor-fold>
 
 }
