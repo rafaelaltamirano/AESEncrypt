@@ -15,11 +15,14 @@ class ExampleInstrumentedTest {
 
         // CONSTANTES
         private const val SECURITY_ENCRYPTION_SYMMETRIC_KEY = "DAgawS2KsZBRyElqMUOJhLiQqnVTvli4B59qm1XeSQM="
-        private const val SECURITY_ENCRYPTION_HMACKEY       = "C73e7IZeeEhqQjXjJFf1ug=="
+        private const val SECURITY_ENCRYPTION_HMACKEY = "C73e7IZeeEhqQjXjJFf1ug=="
 
         // TEMPORALES ENCRIPTADAS
-        private const val symmetricalKeyEncrypt = "Vxz7Z9EQPT+4L49nkjL9e+y18raDF7Djs/rL9Ip5NiWSuJrpCyyxX+YaO2LF4msM18Blcfoyue+WJuLCHuevp59oRnIkqDiTS+KlUCQpW81+UpsDpou1t8k8SRbb2D4O"
-        private const val hmacKeyEncrypt = "aaYTSPen030xUN7+NmY5yw==JC2uBdJp19PVjqbg2M1XrraQLc4IxqM+TPlP0x/wrcM=wtirKYyGXqdRDILdFpj2TMnV8ndMfWHhFUoJMBqVQEI="
+        private const val symmetricalTemporaryEncryptedKey = "LqjjKMA5HNYxUMUS4UQnQa2c6heYJqlYIKFpUN7O3dqoEJVpOtmdS98sk8w8K287tQeSdrtATPTkNmXCPcaWlTxknyHKLWKojXbpIu2MkJqC6QQ1MzoNEgrxmDuZNQfH"
+        private const val hmacTemporaryEncryptedKey = "ixzbzllN5C94oKPArl57dpC3uy/ePs01tWSoV0EcM/ZlJzAvTqeJ4gD4BkFJEFVVKUVCyvqZ077tGHvSjuD+c8Rm3aXsLtIwB23fH7Jnli4="
+
+        // YOLANDA@YOPMAIL.COM
+        val mensaje = "bH5Cnott9d1EhzftUjkDm/b7d8YCUw43ThQd92IkgiLBaUAHbPSuOfRR0eFXkHOqtwH2VTSecgRgATIa+ktD8Q0j+pMPoSGTHsItrQ/brOw="
 
         // TEMPORALES DESENCRIPTDA
         private const val symmetricalKey = "DAgawS2KsZBRyElqMUOJhLiQqnVTvli4B59qm1XeSQM="
@@ -33,13 +36,13 @@ class ExampleInstrumentedTest {
     @Test
     fun returnTrueIfCodeAndDecodeSuccess() {
 
+        aes.setTemporaryEncryptedKeys(symmetricalTemporaryEncryptedKey, hmacTemporaryEncryptedKey)
+
         val originalMessage = "yolanda@yopmail.com"
 
-        val encrypt = aes.code(originalMessage, hmacKey, symmetricalKey)
-//        println(">>: encrypt: $encrypt")
+        val encrypt = aes.code(originalMessage)
 
-        val message = aes.decode(encrypt, hmacKey, symmetricalKey)
-//        println(">>: message: $message")
+        val message = aes.decode(encrypt)
 
         assertEquals(message, originalMessage)
 
@@ -60,11 +63,12 @@ class ExampleInstrumentedTest {
     @Test
     fun returnTrueIfRemoteMessageIfDecode() {
 
-        val encrypt = symmetricalKeyEncrypt
-        val expected = SECURITY_ENCRYPTION_SYMMETRIC_KEY
+        aes.setTemporaryEncryptedKeys(symmetricalTemporaryEncryptedKey, hmacTemporaryEncryptedKey)
 
-        val message = aes.decode(encrypt, hmacKey, symmetricalKey)
-//        println(">>: message: $message")
+        val encrypt = "r91RBh5PjB/Dit4AlDEO6tpGoReeJMMaqZdXsdy6e30iNc1dKP4fxMeCFwLqfS/yWyjwJ+nBHrls7+95WQlnpA1NIlqf600eVOjIZHgMVFQ="
+        val expected = "yelena@yopmail.com"
+
+        val message = aes.decode(encrypt)
 
         assertEquals(message, expected)
 
