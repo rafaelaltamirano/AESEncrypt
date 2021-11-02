@@ -1,8 +1,7 @@
 package com.globaltask.encript.aes
 
-import android.util.Base64
-import com.globaltask.encript.aes.exceptions.CorruptMessageException
-import com.globaltask.encript.aes.exceptions.UndefinedTemporaryKeysException
+import com.globaltask.encript.exceptions.CorruptMessageException
+import com.globaltask.encript.exceptions.UndefinedTemporaryKeysException
 import com.globaltask.encript.base64ToByteArray
 import com.globaltask.encript.toBase64
 import java.security.SecureRandom

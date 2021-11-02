@@ -3,6 +3,7 @@ package com.globaltask.encript.rsa
 import android.util.Base64
 import com.globaltask.encript.aes.Aes
 import com.globaltask.encript.base64ToByteArray
+import com.globaltask.encript.exceptions.UndefinedTemporaryKeysException
 import com.globaltask.encript.toBase64
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -35,12 +36,14 @@ class Rsa private constructor(private val aes: Aes) {
     }
 
     fun code(message: String): String {
+        if (publicKey==null) throw UndefinedTemporaryKeysException()
         cipher.init(ENCRYPT_MODE, publicKey)
         val encryptedMessageByteArray = cipher.doFinal(message.toByteArray())
         return encryptedMessageByteArray.toBase64()
     }
 
     fun decode(encrypted: String): String {
+        if (privateKey==null) throw UndefinedTemporaryKeysException()
         cipher.init(DECRYPT_MODE, privateKey)
         val messageByteArray = cipher.doFinal(encrypted.base64ToByteArray())
         return String(messageByteArray)
