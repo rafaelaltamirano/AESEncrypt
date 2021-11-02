@@ -1,4 +1,4 @@
-package com.globaltask.encript.exceptions
+package com.globaltask.encript.aes.exceptions
 
 import java.lang.Exception
 

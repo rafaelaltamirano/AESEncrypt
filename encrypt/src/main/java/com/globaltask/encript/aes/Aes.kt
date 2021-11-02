@@ -1,8 +1,10 @@
-package com.globaltask.encript
+package com.globaltask.encript.aes
 
 import android.util.Base64
-import com.globaltask.encript.exceptions.CorruptMessageException
-import com.globaltask.encript.exceptions.UndefinedTemporaryKeysException
+import com.globaltask.encript.aes.exceptions.CorruptMessageException
+import com.globaltask.encript.aes.exceptions.UndefinedTemporaryKeysException
+import com.globaltask.encript.base64ToByteArray
+import com.globaltask.encript.toBase64
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.Cipher.DECRYPT_MODE
@@ -29,7 +31,6 @@ class Aes private constructor(globalKeySymmetrical: String, globalKeyHmac: Strin
     private val encryptType = "AES"
     private val hmacLength = 32 // Bytes
     private val secureRandomLength = 16 // Bytes
-    private val base64flag = Base64.DEFAULT
 
     private val cipher by lazy { Cipher.getInstance(transformation) }
     private val ivByteArray by lazy { generateIv() }
@@ -152,21 +153,5 @@ class Aes private constructor(globalKeySymmetrical: String, globalKeyHmac: Strin
         return result
     }
 
-    //<editor-fold desc="FUNCIONES DE EXTENSIÓN">
-
-    /**
-     * Función de extensión que facilita la conversion de ByteArray a base64
-     */
-    private fun ByteArray.toBase64(): String {
-        return Base64.encodeToString(this, base64flag).replace("\n", "")
-    }
-
-    /**
-     * Función de extensión que facilita la decodificacion de un texto en Base64 a ByteArray
-     */
-    private fun String.base64ToByteArray(): ByteArray {
-        return Base64.decode(this, base64flag)
-    }
-    //</editor-fold>
 
 }
